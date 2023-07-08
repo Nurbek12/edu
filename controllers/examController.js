@@ -60,7 +60,6 @@ export const getMyExams = async (req, res) => {
                     pipeline: [{
                         $match: {
                             student: new Types.ObjectId(req.user?._id),
-                            status: 'finish'
                         }
                     }, {
                         $project: {
@@ -105,8 +104,15 @@ export const getMyExams = async (req, res) => {
     }
 }
 
-
-
+export const deletExam = async (req, res) => {
+    try {
+        await Exam.findByIdAndDelete(req.params.id)
+        res.status(200).json(true)
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ message: 'Server error!' })
+    }
+}
 
 
 

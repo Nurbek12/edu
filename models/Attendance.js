@@ -20,4 +20,36 @@ export default model('attendences', new Schema({
     date: {
         type: String,
     },
+    time: {
+        type: String,
+    },
+    status: {
+        type: Boolean,
+    },
+}))
+
+export const Explicable = model('explicables', new Schema({
+    student: {
+        type: Schema.Types.ObjectId,
+        ref: 'users'
+    },
+    group: {
+        type: Schema.Types.ObjectId,
+        ref: 'groups'
+    },
+    start_date: {
+        type: String,
+        required: true
+    },
+    end_date: {
+        type: String,
+        required: true
+    },
+    description: {
+        type: String,
+        required: true
+    },
+    file: {
+        type: String
+    },
 }))

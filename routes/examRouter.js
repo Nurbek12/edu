@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import { auth } from '../middlewares/authMiddleware.js'
-import { create, getAll, getMyExams, update } from '../controllers/examController.js'
+import { create, getAll, getMyExams, update, deletExam } from '../controllers/examController.js'
 
 export default Router()
     .get('/', auth, getAll)
@@ -8,3 +8,5 @@ export default Router()
 
     .post('/', auth, create)
     .put('/:id', auth, update)
+
+    .delete('/:id', deletExam)

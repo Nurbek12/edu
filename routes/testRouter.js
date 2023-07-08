@@ -1,16 +1,18 @@
 import { Router } from 'express'
 import { auth } from '../middlewares/authMiddleware.js'
-import { create, getAll, deleteTest, getById, deleteResult,
+import { create, getAll, deleteTest, getById, deleteResult, getByGroup,
     start, getTest, finishTest, updateVarint, download, getResults,
-createQuestion, deleteQuestion, updateQuestion, updateTest } from '../controllers/testController.js'
+createQuestion, deleteQuestion, updateQuestion, updateTest, addAccessToTest } from '../controllers/testController.js'
 
 export default Router()
     .get('/', auth, getAll)
+    
+    .get('/access/:group/:exam', auth, getByGroup)
+    .post('/access', auth, addAccessToTest)
+    
     .get('/id/:id', auth, getById)
-
     .get('/get/:id', auth, getTest)
     .get('/download', auth, download)
-
     .get('/result/', auth, getResults)
     .delete('/result/:id', auth, deleteResult)
 

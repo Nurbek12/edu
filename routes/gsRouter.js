@@ -1,11 +1,11 @@
 import { Router } from "express"
-import { creteGroup, deleteGroup, editGroup, getAllGroups, getAllGroupById,
+import { creteGroup, deleteGroup, editGroup, getAllGroups, getForTeacher,
 creteScience, deleteScience, editScience, getAllScience} from '../controllers/gsController.js'
 import { auth } from "../middlewares/authMiddleware.js"
 
 export const groupRouter = Router()
     .get('/', auth, getAllGroups)
-    // .get('/id/:id', auth, getAllGroupById)
+    .get('/access', auth, getForTeacher)
     .post('/', auth, creteGroup)
     .put('/:id', auth, editGroup)
     .delete('/:id', auth, deleteGroup)

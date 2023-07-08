@@ -1,22 +1,23 @@
 import Test, { Question } from "../models/Test.js"
 import Result from "../models/Result.js"
+import User from "../models/User.js"
 import { Types } from 'mongoose'
 
 import excel from 'exceljs'
-import path from 'path'
+import path, { join } from 'path'
 import fs from 'fs'
 import { fileURLToPath } from 'url'
 import { v4 as uuid } from 'uuid'
 
 const dirname = fileURLToPath(new URL('.', import.meta.url));
 
-function checkTrueVarinat(questions) {
+export function checkTrueVarinat(questions) {
     return questions.reduce((a, b) => {
         return a + (b.variants.find(v => v._id.toString() === b.selected)?.value || 0)
     }, 0)
 }
 
-function shuffleArray(array) {
+export function shuffleArray(array) {
     for (let i = array.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [array[i], array[j]] = [array[j], array[i]];
@@ -24,13 +25,17 @@ function shuffleArray(array) {
     return array;
 }
 
-
+export function deleteFile(file) {
+    fs.rmSync(join(dirname, '../', 'upload', file), { force: true })
+}
 
 // results
 export const getResults = async (req, res) => {
     try {
-        const $match = { status: 'finish' }
+        const $match = { status: 'finish', midterm: null }
         if (req.query.user) Object.assign($match, { student: new Types.ObjectId(req.query.user) })
+        if (req.query.test) Object.assign($match, { test: new Types.ObjectId(req.query.test) })
+        if (req.query.group) Object.assign($match, { group: new Types.ObjectId(req.query.group) })
         const result = await Result.aggregate([
             { $match },
             {
@@ -39,19 +44,6 @@ export const getResults = async (req, res) => {
                     localField: "student",
                     foreignField: "_id",
                     as: "student",
-                    pipeline: [{
-                        $lookup: {
-                            from: "groups",
-                            localField: "group",
-                            foreignField: "_id",
-                            as: "group",
-                        }
-                    }, {
-                        $project: {
-                            name: 1,
-                            group: { $arrayElemAt: ["$group.name", 0] },
-                        }
-                    }]
                 }
             },
             {
@@ -68,9 +60,23 @@ export const getResults = async (req, res) => {
                 }
             },
             {
+                $lookup: {
+                    from: "groups",
+                    localField: "group",
+                    foreignField: "_id",
+                    as: "group",
+                    pipeline: [{
+                        $project: {
+                            name: 1
+                        }
+                    }]
+                }
+            },
+            {
                 $project: {
                     student: { $arrayElemAt: ["$student", 0] },
                     test: { $arrayElemAt: ["$test", 0] },
+                    group: { $arrayElemAt: ["$group", 0] },
                     start_time: 1,
                     end_time: 1,
                     rate: 1,
@@ -81,7 +87,7 @@ export const getResults = async (req, res) => {
                 $sort: {
                     _id: -1
                 }
-            }
+            },
         ])
         res.status(200).json(result)
     } catch (error) {
@@ -90,33 +96,49 @@ export const getResults = async (req, res) => {
     }
 }
 
+export const addAccessToTest = async (req, res) => {
+    try {
+        const newResult = await Result.create(req.body)
+        res.status(200).json(newResult)
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ message: 'Server error!' })
+    }
+}
+
 export const start = async (req, res) => {
     try {
-        const result = await Result.findOne({ $and: [{ test: req.params.id }, { student: req.body.student }] })
-        if (!result) {
-            const qs = await Question.aggregate([
-                { $match: { test: new Types.ObjectId(req.params.id) } },
-                { $sample: { size: req.body.count } },
-                {
-                    $project: {
-                        text: 1,
-                        variants: 1
-                    }
+        // const result = await Result.findOne({ $and: [{ test: req.params.id }, { student: req.body.student }] })
+        // if (!result) {
+        const qs = await Question.aggregate([
+            { $match: { test: new Types.ObjectId(req.params.id) } },
+            { $sample: { size: req.body.count } },
+            {
+                $project: {
+                    text: 1,
+                    variants: 1
                 }
-            ])
-            // test: req.params.id, status: 'start', student: req.body.student, start_time: Date.now().toString(),
-            const questions = qs.map(q => ({ ...q, selected: '', variants: shuffleArray(q.variants) }))
-            const newResult = await Result.create({ 
-                exam: req.body.exam,
-                test: req.params.id,
-                student: req.user._id,
-                status: 'start',
-                start_time: Date.now().toString(),
-                questions })
-            res.status(200).json(newResult)
-        } else {
-            res.status(200).json(result)
-        }
+            }
+        ])
+        // test: req.params.id, status: 'start', student: req.body.student, start_time: Date.now().toString(),
+        const questions = qs.map(q => ({ ...q, selected: '', variants: shuffleArray(q.variants) }))
+        // const newResult = await Result.create({
+        //     exam: req.body.exam,
+        //     test: req.params.id,
+        //     student: req.user._id,
+        //     status: 'start',
+        //     start_time: Date.now().toString(),
+        //     questions
+        // })
+        const result = await Result.findByIdAndUpdate(req.body.result, {
+            status: 'start',
+            start_time: Date.now().toString(),
+            questions
+        })
+        res.status(200).json(result)
+        // } else {
+        //     res.status(200).json(result)
+        // }
     } catch (error) {
         console.log(error);
         res.status(500).json({ message: 'Server error!' })
@@ -175,22 +197,50 @@ export const deleteResult = async (req, res) => {
     }
 }
 
+export const getByGroup = async (req, res) => {
+    try {
+        const result = await User.aggregate([
+            {
+                $match: { group: new Types.ObjectId(req.params.group), role: 'student', status: 'aktiv' }
+            },
+            {
+                $lookup: {
+                    from: 'results',
+                    foreignField: 'student',
+                    localField: '_id',
+                    as: 'result',
+                    pipeline: [{
+                        $match: { exam: new Types.ObjectId(req.params.exam) }
+                    }]
+                }
+            },
+            {
+                $project: {
+                    name: 1,
+                    att: {
+                        $cond: {
+                            if: { $eq: [{ $size: "$result" }, 0] },
+                            then: true,
+                            else: false
+                        }
+                    }
+                }
+            }
+        ])
+        res.status(200).json(result)
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ message: 'Server error!' })
+    }
+}
 
 export const download = async (req, res) => {
     try {
-        const { group, ...other } = req.query
-        const result = await Result.find({ status: 'finish', ...other })
-            .populate('test', 'name count')
-            .populate({
-                path: 'student',
-                select: ['name', 'group'],
-                model: 'users',
-                populate: {
-                    path: 'group',
-                    model: 'groups',
-                }
-            })
-            .select('test student rate')
+        const result = await Result.find({ status: 'finish', midterm: null, ...req.query })
+            .populate('group', 'name')
+            .populate('test', 'name')
+            .populate('student', 'name')
+            .select('test student rate questions')
         const workbook = new excel.Workbook()
         const worksheet = workbook.addWorksheet('Results')
         worksheet.columns = [
@@ -201,25 +251,13 @@ export const download = async (req, res) => {
             { header: "Foizi", key: 'percent', width: 15 },
         ]
         result.forEach(r => {
-            if (group) {
-                if (group === r.student.group.id) {
-                    worksheet.addRow({
-                        'rate': r.rate,
-                        'student.name': r.student.name,
-                        'test.name': r.test.name,
-                        'student.group': r.student.group.name,
-                        'percent': parseFloat(r.rate * 100 / r.test.count).toFixed(1)
-                    })
-                }
-            } else {
-                worksheet.addRow({
-                    'rate': r.rate,
-                    'student.name': r.student.name,
-                    'test.name': r.test.name,
-                    'student.group': r.student.group.name,
-                    'percent': parseFloat(r.rate * 100 / r.test.count).toFixed(1)
-                })
-            }
+            worksheet.addRow({
+                'rate': r.rate,
+                'student.name': r.student.name || 'topilmadi',
+                'test.name': r.test?.name || 'topilmadi',
+                'student.group': r.group.name || 'topilmadi',
+                'percent': parseFloat(r.rate * 100 / (r.questions.length||1)).toFixed(1)
+            })
         })
         const file = path.join(dirname, '../', 'protected', `file-${uuid()}.xlsx`);
         workbook.xlsx.writeFile(file)

@@ -13,6 +13,7 @@ import authRouter from './routes/authRouter.js'
 import testRouter from './routes/testRouter.js'
 import examRouter from './routes/examRouter.js'
 import tableRouter from './routes/tableRouter.js'
+import midtermRouter from './routes/midtermRouter.js'
 import resourceRouter from './routes/resourceRouter.js'
 import attendanceRouter from './routes/attendanceRouter.js'
 import { groupRouter, scienceRouter } from './routes/gsRouter.js'
@@ -22,12 +23,13 @@ import { Server } from 'socket.io'
 const dirname = fileURLToPath(new URL('.', import.meta.url));
 const app = express()
 const server = createServer(app)
-const io = new Server(server, { cors: { credentials: true, origin: 'http://localhost:5173' } })
+const io = new Server(server, { cors: { credentials: true, origin: '/' } })
 
 app
     .use(cors())
     .use(express.json({ limit: '100mb' }))
     .use(express.urlencoded({ limit: '100mb', extended: true, parameterLimit:50000 }))
+    .use('/files', express.static(path.join(dirname, 'upload')))
     .use(express.static(path.join(dirname, 'dist')))
     
     .use(indexRouter)
@@ -37,9 +39,9 @@ app
     .use('/test', testRouter)
     .use('/group', groupRouter)
     .use('/table', tableRouter)
-    .use('/science', scienceRouter)
+    .use('/subject', scienceRouter)
+    .use('/midterm', midtermRouter)
     .use('/resource', resourceRouter)
-
     .use('/attendence', attendanceRouter)
 
     .use('*', async (req, res) => res.sendFile(join(dirname, 'dist', 'index.html')))

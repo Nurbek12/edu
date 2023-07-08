@@ -1,17 +1,19 @@
 import { Router } from "express"
-import { getAllStudents, createUser, getAllTeachers, deleteUser, updateUser, getAllInspectors, } from '../controllers/userController.js'
+import { getAllStudents, createUser, getForPage, getAllTeachers, 
+    deleteUser, updateUser, getAllInspectors, addContract, studentContract } from '../controllers/userController.js'
 import { auth } from "../middlewares/authMiddleware.js"
 
 export default Router()
     .get('/student', auth, getAllStudents)
+    .get('/student/page', auth, getForPage)
+    .get('/contract/:id', auth, studentContract)
 
     .get('/teacher', auth, getAllTeachers)
 
-    // .get('/admin')
+    .get('/inspector', auth, getAllInspectors)
 
-    .get('/inspector', getAllInspectors)
-
-    .post('/', createUser)
+    .post('/', auth, createUser)
+    .post('/contract', auth, addContract)
 
     .put('/:id', auth, updateUser)
 

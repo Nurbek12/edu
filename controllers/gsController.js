@@ -20,17 +20,9 @@ export const getAllGroups = async (req, res) => {
     }
 }
 
-export const getAllGroupById = async (req, res) => {
+export const getForTeacher = async (req, res) => {
     try{
-        const groups = await Group.aggregate([
-            { $lookup: {
-                    from: 'users',
-                    foreignField: 'group',
-                    localField: '_id',
-                    as: 'users'
-            } },
-            { $project: { name: 1, users: 1 } }
-        ])
+        const groups = await Group.find({ _id: { $in: req.user.accessgroup } })
         res.status(200).json(groups)
     }catch(error){
         console.log(error);

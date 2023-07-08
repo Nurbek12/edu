@@ -13,6 +13,10 @@ export default model('talbes', new Schema({
         type: String,
         required: true
     },
+    room: {
+        type: String,
+        required: true
+    },
     day: {
         type: String,
         required: true,

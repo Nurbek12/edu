@@ -13,6 +13,14 @@ export default model('results', new Schema({
         type: Schema.Types.ObjectId,
         ref: 'exams'
     },
+    midterm: {
+        type: Schema.Types.ObjectId,
+        ref: 'midterms'
+    },
+    group: {
+        type: Schema.Types.ObjectId,
+        ref: 'groups'
+    },
     start_time: {
         type: String,
     },
@@ -21,10 +29,11 @@ export default model('results', new Schema({
     },
     status: {
         type: String,
-        enum: ['start', 'process', 'finish']
+        enum: ['created', 'start', 'finish']
     },
     rate: {
         type: Number,
+        default: 0
     },
     questions: []
 }))

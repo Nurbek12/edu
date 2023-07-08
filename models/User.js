@@ -25,7 +25,20 @@ export default model('users', new Schema({
     },
     role: {
         type: String,
-        enum: ['student', 'teacher', 'admin', 'sa', 'inspector'],
+        enum: ['student', 'teacher', 'admin', 'sa', 'inspector', 'dean', 'accountant'],
         default: 'student'
+    },
+    accessgroup: [{
+        type: Schema.Types.ObjectId,
+        ref: 'groups'
+    }],
+    
+    status: {
+        type: String,
+        enum: ['aktiv', 'chetlashtirilgan'],
+        default: 'aktiv'
+    },
+    reason: {
+        type: String
     }
 }))

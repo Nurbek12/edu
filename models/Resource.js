@@ -17,6 +17,13 @@ export default model('resources', new Schema({
         type: String,
         required: true
     },
+    date: {
+        type: String,
+    },
+    room: {
+        type: String,
+        required: true
+    },
     files: [{
         type: String,
     }]
