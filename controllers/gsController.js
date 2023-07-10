@@ -71,6 +71,15 @@ export const getAllScience = async (req, res) => {
         res.status(500).json({ message: 'Server error!' })
     }
 }
+export const getForTeacherSubjects = async (req, res) => {
+    try{
+        const subjects = await Science.find({ name: { $in: req.user.accesssubjects } })
+        res.status(200).json(subjects)
+    }catch(error){
+        console.log(error);
+        res.status(500).json({ message: 'Server error!' })
+    }
+}
 
 export const creteScience = async (req, res) => {
     try{

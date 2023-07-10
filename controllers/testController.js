@@ -215,8 +215,23 @@ export const getByGroup = async (req, res) => {
                 }
             },
             {
+                $lookup: {
+                    from: 'contracts',
+                    foreignField: 'student',
+                    localField: '_id',
+                    as: 'contract',
+                    pipeline: [{
+                        $project: {
+                            amount: 1,
+                            date: 1
+                        }
+                    }]
+                }
+            },
+            {
                 $project: {
                     name: 1,
+                    total: { $sum: '$contract.amount' },
                     att: {
                         $cond: {
                             if: { $eq: [{ $size: "$result" }, 0] },

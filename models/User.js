@@ -32,6 +32,9 @@ export default model('users', new Schema({
         type: Schema.Types.ObjectId,
         ref: 'groups'
     }],
+    accesssubjects: [{
+        type: String,
+    }],
     
     status: {
         type: String,

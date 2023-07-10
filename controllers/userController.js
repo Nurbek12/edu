@@ -35,7 +35,7 @@ export const getForPage = async (req, res) => {
 export const getAllTeachers = async (req, res) => {
     try {
         const students = await User.find({ role: "teacher", ...req.query })
-            .select("name birthdate phone accessgroup login password group role")
+            .select("name birthdate phone accessgroup accesssubjects login password group role")
         res.status(200).json(students)
     } catch (error) {
         console.log(error);
