@@ -4,7 +4,7 @@ import { Types } from "mongoose"
 
 export const getAll = async (req, res) => {
     try {
-        const result = await Attendance.find(req.query)
+        const result = await Attendance.find({...req.query, createdAt: req.distance})
             .populate('student', 'name')
             .populate('group', 'name')
             .populate('teacher', 'name')
@@ -73,22 +73,27 @@ export const getByUser = async (req, res) => {
                     foreignField: 'student',
                     localField: '_id',
                     as: 'attendences',
-                    pipeline: [{
-                        $lookup: {
-                            from: 'users',
-                            foreignField: '_id',
-                            localField: 'teacher',
-                            as: 'teacher'
+                    pipeline: [
+                        {
+                            $match: { createdAt: req.distance }
+                        },
+                        {
+                            $lookup: {
+                                from: 'users',
+                                foreignField: '_id',
+                                localField: 'teacher',
+                                as: 'teacher'
+                            }
+                        }, {
+                            $project: {
+                                teacher: { $arrayElemAt: ["$teacher.name", 0] },
+                                subject: 1,
+                                date: 1,
+                                time: 1,
+                                status: 1,
+                            }
                         }
-                    }, {
-                        $project: {
-                            teacher: { $arrayElemAt: ["$teacher.name", 0] },
-                            subject: 1,
-                            date: 1,
-                            time: 1,
-                            status: 1,
-                        }
-                    }]
+                    ]
                 }
             },
             {
@@ -118,7 +123,7 @@ export const create = async (req, res) => {
 
 export const getExps = async (req, res) => {
     try {
-        const result = await Explicable.find(req.query)
+        const result = await Explicable.find({...req.query, createdAt: req.distance })
             .populate('student', 'name')
             .populate('group', 'name')
         res.status(200).json(result)

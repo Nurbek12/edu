@@ -3,7 +3,7 @@ import { Types } from 'mongoose'
 
 export const getTableByGroup = async (req, res) => {
     try {
-        const $match = {}
+        const $match = {createdAt: req.distance}
         if(req.query.group) Object.assign($match, { group: new Types.ObjectId(req.query.group) })
         else if(req.user.role === 'student') Object.assign($match, { group: new Types.ObjectId(req.user?.group) })
         else if(req.user.role === 'teacher') Object.assign($match, { teacher: new Types.ObjectId(req.user?._id) })

@@ -26,6 +26,8 @@ export default model('attendences', new Schema({
     status: {
         type: Boolean,
     },
+}, {
+    timestamps: true
 }))
 
 export const Explicable = model('explicables', new Schema({
@@ -52,4 +54,6 @@ export const Explicable = model('explicables', new Schema({
     file: {
         type: String
     },
+}, {
+    timestamps: true
 }))

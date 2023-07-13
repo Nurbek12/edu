@@ -26,4 +26,6 @@ export default model('talbes', new Schema({
         type: String,
         required: true
     }
+}, {
+    timestamps: true
 }))

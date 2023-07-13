@@ -27,6 +27,8 @@ export default model('resources', new Schema({
     files: [{
         type: String,
     }]
+}, {
+    timestamps: true
 }))
 
 // resources

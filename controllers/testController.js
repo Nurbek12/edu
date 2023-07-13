@@ -1,4 +1,4 @@
-import Test, { Question } from "../models/Test.js"
+import Test, { Question, Midterm } from "../models/Test.js"
 import Result from "../models/Result.js"
 import User from "../models/User.js"
 import { Types } from 'mongoose'
@@ -32,7 +32,7 @@ export function deleteFile(file) {
 // results
 export const getResults = async (req, res) => {
     try {
-        const $match = { status: 'finish', midterm: null }
+        const $match = { status: 'finish', midterm: null, createdAt: req.distance }
         if (req.query.user) Object.assign($match, { student: new Types.ObjectId(req.query.user) })
         if (req.query.test) Object.assign($match, { test: new Types.ObjectId(req.query.test) })
         if (req.query.group) Object.assign($match, { group: new Types.ObjectId(req.query.group) })
@@ -210,7 +210,7 @@ export const getByGroup = async (req, res) => {
                     localField: '_id',
                     as: 'result',
                     pipeline: [{
-                        $match: { exam: new Types.ObjectId(req.params.exam) }
+                        $match: { exam: new Types.ObjectId(req.params.exam), createdAt: req.distance }
                     }]
                 }
             },
@@ -251,7 +251,7 @@ export const getByGroup = async (req, res) => {
 
 export const download = async (req, res) => {
     try {
-        const result = await Result.find({ status: 'finish', midterm: null, ...req.query })
+        const result = await Result.find({ status: 'finish', midterm: null, createdAt: req.distance, ...req.query })
             .populate('group', 'name')
             .populate('test', 'name')
             .populate('student', 'name')

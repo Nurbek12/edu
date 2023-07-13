@@ -43,5 +43,8 @@ export default model('users', new Schema({
     },
     reason: {
         type: String
+    },
+    start_year: {
+        type: Number
     }
 }))

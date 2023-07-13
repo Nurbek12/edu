@@ -6,7 +6,7 @@ import { Types } from "mongoose"
 export const getAllStudents = async (req, res) => {
     try {
         const students = await User.find({ role: "student", ...req.query })
-            .select("name birthdate phone login password group role status reason")
+            .select("name birthdate phone login password group role status reason start_year")
         res.status(200).json(students)
     } catch (error) {
         console.log(error);
@@ -16,12 +16,12 @@ export const getAllStudents = async (req, res) => {
 
 export const getForPage = async (req, res) => {
     try {
-        const { page, limit, search } = req.query
+        const { page, limit, search, status } = req.query
         const skip = (page - 1) * limit
         const filter = search ? { name: { $regex: search, $options: 'i' } } : {}
         const [data, total] = await Promise.all([
             User.find({...filter, role: "student"}).skip(skip).limit(parseInt(limit)).lean()
-            .select("name birthdate phone login password group role status"),
+            .select("name birthdate phone login password group role status start_year"),
             User.countDocuments({...filter, role: "student"}),
         ])
     
@@ -45,7 +45,7 @@ export const getAllTeachers = async (req, res) => {
 
 export const getAllInspectors = async (req, res) => {
     try {
-        const students = await User.find({ role: { $in: ['inspector', 'dean', 'accountant'] } })
+        const students = await User.find({ role: { $in: ['inspector', 'dean', 'accountant', 'admin'] } })
             .select("name phone login password role")
         res.status(200).json(students)
     } catch (error) {
@@ -102,12 +102,14 @@ export const studentContract = async (req, res) => {
                     foreignField: 'student',
                     localField: '_id',
                     as: 'contract',
-                    pipeline: [{
-                        $project: {
-                            amount: 1,
-                            date: 1
+                    pipeline: [
+                        {
+                            $match: { createdAt: req.distance }
+                        },
+                        {
+                            $project: { amount: 1, date: 1 }
                         }
-                    }]
+                    ]
                 }
             },
             {

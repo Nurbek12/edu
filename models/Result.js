@@ -36,4 +36,6 @@ export default model('results', new Schema({
         default: 0
     },
     questions: []
+}, {
+    timestamps: true
 }))

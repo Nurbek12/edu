@@ -14,7 +14,7 @@ const dirname = fileURLToPath(new URL('.', import.meta.url));
 export const getResults = async (req, res) => {
     try {
         const result = await Result.aggregate([
-            { $match: { status: 'finish', exam: null } },
+            { $match: { status: 'finish', exam: null, createdAt: req.distance } },
             {
                 $lookup: {
                     from: "users",
@@ -81,7 +81,7 @@ export const getResults = async (req, res) => {
 export const getResultByUser = async (req, res) => {
     try {
         const result = await Result.aggregate([
-            { $match: { student: new Types.ObjectId(req.params.id), status: 'finish' } },
+            { $match: { student: new Types.ObjectId(req.params.id), status: 'finish', createdAt: req.distance } },
             {
                 $lookup: {
                     from: "users",
@@ -219,7 +219,11 @@ export const deleteResult = async (req, res) => {
 
 export const getAll = async (req, res) => {
     try {
-        const result = await Midterm.find({ teacher: req.user._id })
+        const $match = {}
+        if(req.user?.role === 'teacher') Object.assign($match, { teacher: req.user._id })
+        if(req.user?.role === 'student') Object.assign($match, { groups: {$in: [req.user.group]} })
+        if(req.query.date) Object.assign($match, { date: { $gte: req.query.date } })
+        const result = await Midterm.find($match)
         res.status(200).json(result)
     } catch (error) {
         console.log(error);
@@ -348,17 +352,10 @@ export const getTestForGroup = async (req, res) => {
 export const download = async (req, res) => {
     try {
         const { group, ...other } = req.query
-        const result = await Result.find({ status: 'finish', ...other})
+        const result = await Result.find({ status: 'finish', group, createdAt: req.distance, ...other})
             .populate('midterm', 'name count')
-            .populate({
-                path: 'student',
-                select: ['name', 'group'],
-                model: 'users',
-                populate: {
-                    path: 'group',
-                    model: 'groups',
-                }
-            })
+            .populate('group', 'name')
+            .populate('student', 'name')
             .select('midterm student rate')
         const workbook = new excel.Workbook()
         const worksheet = workbook.addWorksheet('Results')
@@ -370,25 +367,13 @@ export const download = async (req, res) => {
             { header: "Foizi", key: 'percent', width: 15 },
         ]
         result.forEach(r => {
-            if(group){
-                if(group === r.student.group.id){
-                    worksheet.addRow({
-                        'rate': r.rate,
-                        'student.name': r.student.name || 'topilmadi',
-                        'midterm.name': r.midterm.name || 'topilmadi',
-                        'student.group': r.student.group.name || 'topilmadi',
-                        'percent': parseFloat(r.rate * 100 / r.midterm.count).toFixed(1)
-                    })
-                }
-            }else{
-                worksheet.addRow({
-                    'rate': r.rate,
-                    'student.name': r.student.name || 'topilmadi',
-                    'midterm.name': r.midterm.name || 'topilmadi',
-                    'student.group': r.student.group.name || 'topilmadi',
-                    'percent': parseFloat(r.rate * 100 / r.midterm.count).toFixed(1)
-                })
-            }
+            worksheet.addRow({
+                'rate': r.rate,
+                'student.name': r.student.name || 'topilmadi',
+                'midterm.name': r.midterm.name || 'topilmadi',
+                'student.group': r.student.group.name || 'topilmadi',
+                'percent': parseFloat(r.rate * 100 / r.midterm.count).toFixed(1)
+            })
         })
         const file = path.join(dirname, '../', 'protected', `file-${uuid()}.xlsx`);
         workbook.xlsx.writeFile(file)

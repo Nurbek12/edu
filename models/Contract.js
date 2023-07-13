@@ -12,4 +12,6 @@ export default model('contracts', new Schema({
     date: {
         type: String
     },
+}, {
+    timestamps: true
 }))

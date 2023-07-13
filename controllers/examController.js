@@ -3,7 +3,9 @@ import { Types } from 'mongoose'
 
 export const getAll = async (req, res) => {
     try {
-        const result = await Exam.find()
+        const $match = {}
+        if(req.query.date) Object.assign($match, { date: { $gte: req.query.date } })
+        const result = await Exam.find($match)
             .populate('test', 'name science')
             .sort({ _id: -1 })
         res.status(200).json(result)

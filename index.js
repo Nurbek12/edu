@@ -23,7 +23,7 @@ import { Server } from 'socket.io'
 const dirname = fileURLToPath(new URL('.', import.meta.url));
 const app = express()
 const server = createServer(app)
-const io = new Server(server, { cors: { credentials: true, origin: '/' } })
+const io = new Server(server) //, { cors: { credentials: true, origin: '/' } }
 
 app
     .use(cors())
@@ -44,7 +44,7 @@ app
     .use('/resource', resourceRouter)
     .use('/attendence', attendanceRouter)
 
-    .use('*', async (req, res) => res.sendFile(join(dirname, 'dist', 'index.html')))
+    .use('*', async (_, res) => res.sendFile(join(dirname, 'dist', 'index.html')))
 
 SocketIO(io)
 
