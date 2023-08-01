@@ -7,6 +7,7 @@ import excel from 'exceljs'
 import path, { join } from 'path'
 import fs from 'fs'
 import { fileURLToPath } from 'url'
+import { createAction } from './actionController.js'
 import { v4 as uuid } from 'uuid'
 
 const dirname = fileURLToPath(new URL('.', import.meta.url));
@@ -333,6 +334,7 @@ export const create = async (req, res) => {
         questions.forEach(q => q.test = test._id)
         const question = await Question.create(questions)
         res.status(200).json({ ...test._doc, questions: question })
+        createAction(`Hodim ${req.user?.name} ${test.name} test bazasini yaratdi`)
     } catch (error) {
         console.log(error);
         res.status(500).json({ message: 'Server error!' })

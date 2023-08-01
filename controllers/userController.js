@@ -1,7 +1,8 @@
 import User from "../models/User.js"
-import logger from '../config/log.js'
+// import logger from '../config/log.js'
 import Contract from "../models/Contract.js"
 import { Types } from "mongoose"
+import { createAction } from './actionController.js'
 
 export const getAllStudents = async (req, res) => {
     try {
@@ -45,7 +46,7 @@ export const getAllTeachers = async (req, res) => {
 
 export const getAllInspectors = async (req, res) => {
     try {
-        const students = await User.find({ role: { $in: ['inspector', 'dean', 'accountant', 'admin'] } })
+        const students = await User.find({ role: { $in: ['inspector', 'dean', 'accountant', 'admin', 'director'] } })
             .select("name phone login password role")
         res.status(200).json(students)
     } catch (error) {
@@ -72,6 +73,7 @@ export const updateUser = async (req, res) => {
         if (checkLogin) return res.json(false)
         const result = await User.findByIdAndUpdate(req.params.id, { $set: req.body }, { new: true })
         res.status(200).json(result)
+        if(result.status === 'chetlashtirilgan') createAction(`Hodim ${req.user?.name}, ${result.name} ni talabalar safidan chiqardi`)
     } catch (error) {
         console.log(error);
         res.status(500).json({ message: 'Server error!' })
@@ -82,7 +84,8 @@ export const deleteUser = async (req, res) => {
     try{
         const user = await User.findByIdAndDelete(req.params.id)
         res.status(200).json(true)
-        logger.info(`${req.user?.name} - ${user.name} ning malumotlarini bazadan ochirdi: ${new Date().toISOString()}`)
+        // logger.info(`${req.user?.name} - ${user.name} ning malumotlarini bazadan ochirdi: ${new Date().toISOString()}`)
+        createAction(`Hodim ${req.user?.name}, ${user.name} ning malumotlarini bazadan o'chirdi`)
     } catch (error) {
         console.log(error);
         res.status(500).json({ message: 'Server error!' })
@@ -130,8 +133,12 @@ export const studentContract = async (req, res) => {
 
 export const addContract = async (req, res) => {
     try {
-        const result = await Contract.create(req.body)
-        res.status(200).json(result)
+        await Contract.create(req.body)
+        .then(p => p.populate('student', 'name'))
+        .then(result => {
+            res.status(200).json(result)
+            createAction(`Hodim ${req.user?.name}, ${result.student?.name} ning kontragiga ${result.amount} so'm pul qo'shdi`)
+        })
     } catch (error) {
         console.log(error);
         res.status(500).json({ message: 'Server error!' })

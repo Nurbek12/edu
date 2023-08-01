@@ -17,6 +17,7 @@ import midtermRouter from './routes/midtermRouter.js'
 import resourceRouter from './routes/resourceRouter.js'
 import attendanceRouter from './routes/attendanceRouter.js'
 import { groupRouter, scienceRouter } from './routes/gsRouter.js'
+import { getAll } from './controllers/actionController.js'
 
 import { Server } from 'socket.io'
 
@@ -43,6 +44,7 @@ app
     .use('/midterm', midtermRouter)
     .use('/resource', resourceRouter)
     .use('/attendence', attendanceRouter)
+    .get('/action', getAll)
 
     .use('*', async (_, res) => res.sendFile(join(dirname, 'dist', 'index.html')))
 

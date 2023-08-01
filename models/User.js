@@ -25,7 +25,7 @@ export default model('users', new Schema({
     },
     role: {
         type: String,
-        enum: ['student', 'teacher', 'admin', 'sa', 'inspector', 'dean', 'accountant'],
+        enum: ['student', 'teacher', 'admin', 'sa', 'inspector', 'dean', 'accountant', 'director'],
         default: 'student'
     },
     accessgroup: [{

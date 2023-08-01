@@ -35,6 +35,10 @@ export const Explicable = model('explicables', new Schema({
         type: Schema.Types.ObjectId,
         ref: 'users'
     },
+    inspector: {
+        type: Schema.Types.ObjectId,
+        ref: 'users'
+    },
     group: {
         type: Schema.Types.ObjectId,
         ref: 'groups'

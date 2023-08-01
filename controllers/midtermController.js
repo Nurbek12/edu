@@ -6,6 +6,7 @@ import excel from 'exceljs'
 import path from 'path'
 import fs from 'fs'
 import { fileURLToPath } from 'url'
+import { createAction } from './actionController.js'
 import { v4 as uuid } from 'uuid'
 import { checkTrueVarinat, shuffleArray } from './testController.js'
 
@@ -260,6 +261,7 @@ export const create = async (req, res) => {
         questions.forEach(q => q.midterm = test._id)
         const question = await Question.create(questions)
         res.status(200).json({ ...test._doc, questions: question })
+        createAction(`Hodim ${req.user?.name} ${test.name} oraliq nazoratini yaratdi`)
     } catch (error) {
         console.log(error);
         res.status(500).json({ message: 'Server error!' })

@@ -1,5 +1,6 @@
 import Exam from '../models/Exam.js'
 import { Types } from 'mongoose'
+import { createAction } from './actionController.js'
 
 export const getAll = async (req, res) => {
     try {
@@ -19,7 +20,10 @@ export const create = async (req, res) => {
     try {
         await Exam.create(req.body)
             .then(_ => _.populate('test', 'name science'))
-            .then(exam => res.status(200).json(exam))
+            .then(exam => {
+                res.status(200).json(exam)
+                createAction(`Hodim ${req.user?.name}, ${exam.test?.name} test bazasida imtihon yaratdi`)
+            })
     } catch (error) {
         console.log(error);
         res.status(500).json({ message: 'Server error!' })

@@ -1,5 +1,6 @@
 import Attendance, { Explicable } from "../models/Attendance.js"
 import User from '../models/User.js'
+import { createAction } from './actionController.js'
 import { Types } from "mongoose"
 
 export const getAll = async (req, res) => {
@@ -17,6 +18,7 @@ export const getAll = async (req, res) => {
 
 export const getByGroup = async (req, res) => {
     try {
+        // console.log(req.query);
         const today = new Date();
         const dateParts = [
             today.getFullYear().toString().substring(0),
@@ -36,7 +38,7 @@ export const getByGroup = async (req, res) => {
                     localField: '_id',
                     as: 'attendence',
                     pipeline: [{
-                        $match: { date: dateString }
+                        $match: { date: dateString, subject: req.query.subject }
                     }]
                 }
             },
@@ -126,6 +128,7 @@ export const getExps = async (req, res) => {
         const result = await Explicable.find({...req.query, createdAt: req.distance })
             .populate('student', 'name')
             .populate('group', 'name')
+            .populate('inspector', 'name')
         res.status(200).json(result)
     } catch (error) {
         console.log(error);
@@ -144,9 +147,13 @@ export const createExp = async (req, res) => {
         await Explicable.create({...req.body, file: req.file.filename})
             .then(p => p.populate([
                 { path: 'student', select: ['name'] },
+                { path: 'inspector', select: ['name'] },
                 { path: 'group', select: ['name'] },
             ]))
-            .then(result => res.status(200).json(result))
+            .then(result => {
+                res.status(200).json(result)
+                createAction(`Hodim ${result.inspector?.name}, ${result.student?.name} ning ${req.body.start_date} dan ${req.body.end_date} gacha NB larini sababli qildi`)
+            })
     } catch (error) {
         console.log(error);
         res.status(500).json({ message: 'Server error!' })
