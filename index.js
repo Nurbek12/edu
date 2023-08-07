@@ -33,7 +33,7 @@ app
     .use(express.json({ limit: '100mb' }))
     .use(express.urlencoded({ limit: '100mb', extended: true, parameterLimit:50000 }))
     .use('/files', express.static(path.join(dirname, 'upload')))
-    // .use(express.static(path.join(dirname, 'dist')))
+    .use(express.static(path.join(dirname, 'dist')))
     
     .use(indexRouter)
     .use('/exam', examRouter)
@@ -50,7 +50,7 @@ app
     .use('/attendence', attendanceRouter)
     .get('/action', getAll)
 
-    // .use('*', async (_, res) => res.sendFile(join(dirname, 'dist', 'index.html')))
+    .use('*', async (_, res) => res.sendFile(join(dirname, 'dist', 'index.html')))
 
 SocketIO(io)
 
