@@ -4,6 +4,14 @@ import Contract from "../models/Contract.js"
 import { Types } from "mongoose"
 import { createAction } from './actionController.js'
 
+import pdf from 'html-pdf'
+import { studentPdf } from '../config/pdfInfo.js'
+import path from 'path'
+import { fileURLToPath } from 'url'
+import { v4 as uuid } from 'uuid'
+
+const dirname = fileURLToPath(new URL('.', import.meta.url));
+
 export const getAllStudents = async (req, res) => {
     try {
         const students = await User.find({ role: "student", ...req.query })
@@ -139,6 +147,70 @@ export const addContract = async (req, res) => {
             res.status(200).json(result)
             createAction(`Hodim ${req.user?.name}, ${result.student?.name} ning kontragiga ${result.amount} so'm pul qo'shdi`)
         })
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ message: 'Server error!' })
+    }
+}
+
+//
+export const downloadPdfInformation = async (req, res) => {
+    try {
+        const file = path.join(dirname, '../', 'protected', `file-${uuid()}.pdf`);
+        pdf.create(studentPdf(req.user)).toFile(file, function(err, rs) {
+            if (err) {
+              console.log(err);
+              return;
+            }
+            res.download(file, () => { })
+          });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ message: 'Server error!' })
+    }
+}
+
+export const getForRePossible = async (req, res) => {
+    try {
+        const result = await User.aggregate([
+            {
+                $match: {
+                    group: new Types.ObjectId(req.params.group)
+                }
+            },
+            {
+                $lookup: {
+                    from: 'results',
+                    foreignField: 'student',
+                    localField: '_id',
+                    as: 'rates',
+                    pipeline: [{
+                        $match: { 
+                            status: 'finish',
+                            midterm: new Types.ObjectId(req.params.test),
+                            createdAt: req.distance 
+                        }
+                    }, {
+                        $project: {
+                            rate: 1,
+                            questions: { $size: "$questions" },
+                            start_time: 1,
+                            end_time: 1,
+                        }
+                    }]
+                }
+            },
+            {
+                $project: {
+                    name: 1,
+                    rates: { $arrayElemAt: ["$rates", 0] },
+                }
+            },
+            {
+                $sort: { _id: 1 }
+            }
+        ])
+        res.status(200).json(result)
     } catch (error) {
         console.log(error);
         res.status(500).json({ message: 'Server error!' })

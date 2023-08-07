@@ -24,6 +24,9 @@ export default model('results', new Schema({
     start_time: {
         type: String,
     },
+    subject: {
+        type: String
+    },
     end_time: {
         type: String
     },

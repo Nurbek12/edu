@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import { auth } from '../middlewares/authMiddleware.js'
-import { create, getAll, deleteTest, getById, getTestForGroup, deleteResult,
+import { create, getAll, deleteTest, getById, getTestForGroup,
     start, getTest, finishTest, updateVarint, 
     getResultByUser, download, getResults, updateTest } from '../controllers/midtermController.js'
 
@@ -14,7 +14,6 @@ export default Router()
 
     .get('/result/', auth, getResults)
     .get('/result/user/:id', auth, getResultByUser)
-    .delete('/result/:id', auth, deleteResult)
 
     .post('/start/:id', auth, start)
     .put('/finish/:id', auth, finishTest)

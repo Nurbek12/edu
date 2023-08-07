@@ -153,7 +153,7 @@ export const start = async (req, res) => {
                   }}
             ])
             const questions = qs.map(q => ({ ...q, selected: '', variants: shuffleArray(q.variants) }))
-            const newResult = await Result.create({ midterm: req.params.id, status: 'start', student: req.user?._id, start_time: Date.now().toString(), questions })
+            const newResult = await Result.create({ group: req.user?.group, subject: req.body.subject, midterm: req.params.id, status: 'start', student: req.user?._id, start_time: Date.now().toString(), questions })
             res.status(200).json(newResult)
         } else {
             res.status(200).json(result)
@@ -198,16 +198,6 @@ export const finishTest = async (req, res) => {
         await Result.findByIdAndUpdate(req.params.id, {
             $set: newResult
         })
-        res.status(200).json(true)
-    } catch (error) {
-        console.log(error);
-        res.status(500).json({ message: 'Server error!' })
-    }
-}
-
-export const deleteResult = async (req, res) => {
-    try {
-        await Result.findByIdAndDelete(req.params.id)
         res.status(200).json(true)
     } catch (error) {
         console.log(error);

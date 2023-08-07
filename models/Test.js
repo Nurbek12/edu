@@ -5,7 +5,7 @@ export default model('tests', new Schema({
         type: String,
         required: true
     },
-    science: {
+    subject: {
         type: String,
         required: true
     }
@@ -40,6 +40,8 @@ export const Midterm = model('midterms', new Schema({
         type: String,
         required: true
     }
+}, {
+    timestamps: true    
 }))
 
 export const Question = model('questions', new Schema({

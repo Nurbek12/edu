@@ -4,11 +4,11 @@ import User from "../models/User.js"
 import { Types } from 'mongoose'
 
 import excel from 'exceljs'
-import path, { join } from 'path'
+import { join } from 'path'
 import fs from 'fs'
 import { fileURLToPath } from 'url'
-import { createAction } from './actionController.js'
 import { v4 as uuid } from 'uuid'
+import { createAction } from './actionController.js'
 
 const dirname = fileURLToPath(new URL('.', import.meta.url));
 
@@ -191,6 +191,7 @@ export const finishTest = async (req, res) => {
 export const deleteResult = async (req, res) => {
     try {
         await Result.findByIdAndDelete(req.params.id)
+        if(req.query.writeaction) createAction(`Hodim ${req.user.name}, Talaba ${req.query.writeaction}ga '${req.query.testname}' oraliq nazoratini bajarish uchun imkoniyat berdi`)
         res.status(200).json(true)
     } catch (error) {
         console.log(error);
@@ -275,7 +276,7 @@ export const download = async (req, res) => {
                 'percent': parseFloat(r.rate * 100 / (r.questions.length||1)).toFixed(1)
             })
         })
-        const file = path.join(dirname, '../', 'protected', `file-${uuid()}.xlsx`);
+        const file = join(dirname, '../', 'protected', `file-${uuid()}.xlsx`);
         workbook.xlsx.writeFile(file)
             .then(() => {
                 res.setHeader('Content-disposition', 'attachment; filename=file.xlsx');
