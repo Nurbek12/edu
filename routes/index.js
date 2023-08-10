@@ -20,31 +20,3 @@ export default Router()
         return res.status(200).json({ students, inspectors, tests, groups, teachers })
     })
     .get('/logs', async (req, res) => res.sendFile(join(dirname, '../', 'app.log')))
-    .get('/all/names', auth, async (req, res) => {
-        const students = await User.find({ role: 'student' }).select('name')
-        const tests = await Test.find().select('name')
-        const groups = await Group.find().select('name')
-        const exams = await Exam.aggregate([
-            {
-                $lookup: {
-                    from: "tests",
-                    localField: "test",
-                    foreignField: "_id",
-                    as: "test",
-                    pipeline: [{
-                        $project: {
-                            name: 1
-                        }
-                    }]
-                }
-            },
-            {
-                $project: {
-                    name: { $arrayElemAt: ["$test.name", 0] },
-                    test: { $arrayElemAt: ["$test._id", 0] },
-                }
-            },
-        ])
-
-        return res.status(200).json({ students, tests, groups, exams })
-    })
