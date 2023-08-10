@@ -1,12 +1,13 @@
 import User from "../models/User.js"
-// import logger from '../config/log.js'
 import Contract from "../models/Contract.js"
 import { Types } from "mongoose"
 import { createAction } from './actionController.js'
+import bcrypt from 'bcryptjs'
 
 import pdf from 'html-pdf'
 import { studentPdf } from '../config/pdfInfo.js'
 import path from 'path'
+import fs from 'fs'
 import { fileURLToPath } from 'url'
 import { v4 as uuid } from 'uuid'
 
@@ -15,7 +16,7 @@ const dirname = fileURLToPath(new URL('.', import.meta.url));
 export const getAllStudents = async (req, res) => {
     try {
         const students = await User.find({ role: "student", ...req.query })
-            .select("name birthdate phone login password group role status reason start_year")
+            .select("name birthdate phone login group role status reason start_year")
         res.status(200).json(students)
     } catch (error) {
         console.log(error);
@@ -30,7 +31,7 @@ export const getForPage = async (req, res) => {
         const filter = search ? { name: { $regex: search, $options: 'i' } } : {}
         const [data, total] = await Promise.all([
             User.find({...filter, role: "student"}).skip(skip).limit(parseInt(limit)).lean()
-            .select("name birthdate phone login password group role status start_year"),
+            .select("name birthdate phone login group role status start_year"),
             User.countDocuments({...filter, role: "student"}),
         ])
     
@@ -44,7 +45,7 @@ export const getForPage = async (req, res) => {
 export const getAllTeachers = async (req, res) => {
     try {
         const students = await User.find({ role: "teacher", ...req.query })
-            .select("name birthdate phone accessgroup accesssubjects login password group role")
+            .select("name birthdate phone accessgroup accesssubjects login group role")
         res.status(200).json(students)
     } catch (error) {
         console.log(error);
@@ -55,7 +56,7 @@ export const getAllTeachers = async (req, res) => {
 export const getAllInspectors = async (req, res) => {
     try {
         const students = await User.find({ role: { $in: ['inspector', 'dean', 'accountant', 'admin', 'director'] } })
-            .select("name phone login password role")
+            .select("name phone login role")
         res.status(200).json(students)
     } catch (error) {
         console.log(error);
@@ -67,7 +68,11 @@ export const createUser = async (req, res) => {
     try{
         const checkLogin = await User.findOne({ login: req.body.login })
         if(checkLogin) return res.status(200).json(false)
-        const result = await User.create(req.body)
+
+        const salt = await bcrypt.genSalt(10)
+        const password = await bcrypt.hash(req.body.password, salt)
+        const result = await User.create({...req.body, password})
+
         res.status(200).json(result)
     } catch (error) {
         console.log(error);
@@ -79,7 +84,13 @@ export const updateUser = async (req, res) => {
     try{
         const checkLogin = await User.findOne({ $and: [{ _id: { $ne: req.params.id } }, { login: req.body.login }] });
         if (checkLogin) return res.json(false)
-        const result = await User.findByIdAndUpdate(req.params.id, { $set: req.body }, { new: true })
+
+        if(req.body.password){
+            const salt = await bcrypt.genSalt(10)
+            req.body.password = await bcrypt.hash(req.body.password, salt)
+        }
+
+        const result = await User.findByIdAndUpdate(req.params.id, { $set: req.body }, { new: true }).select('-password')
         res.status(200).json(result)
         if(result.status === 'chetlashtirilgan') createAction(`Hodim ${req.user?.name}, ${result.name} ni talabalar safidan chiqardi`)
     } catch (error) {
@@ -162,7 +173,9 @@ export const downloadPdfInformation = async (req, res) => {
               console.log(err);
               return;
             }
-            res.download(file, () => { })
+            res.download(file, () => {
+                setTimeout(() => fs.rmSync(file, { force: true }), 10000)
+            })
           });
     } catch (error) {
         console.log(error);

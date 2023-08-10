@@ -26,7 +26,7 @@ import { Server } from 'socket.io'
 const dirname = fileURLToPath(new URL('.', import.meta.url));
 const app = express()
 const server = createServer(app)
-const io = new Server(server) //, { cors: { credentials: true, origin: '/' } }
+const io = new Server(server) //, { cors: { credentials: true, origin: 'http://localhost:5173' } }
 
 app
     .use(cors())

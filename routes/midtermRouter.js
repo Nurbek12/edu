@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import { auth } from '../middlewares/authMiddleware.js'
 import { create, getAll, deleteTest, getById, getTestForGroup,
-    start, getTest, finishTest, updateVarint, 
+    start, getTest,
     getResultByUser, download, getResults, updateTest } from '../controllers/midtermController.js'
 
 export default Router()
@@ -16,8 +16,6 @@ export default Router()
     .get('/result/user/:id', auth, getResultByUser)
 
     .post('/start/:id', auth, start)
-    .put('/finish/:id', auth, finishTest)
-    .put('/upd/:id/:n/:v', auth, updateVarint)
     
     .post('/', auth, create)
     .put('/:id', auth, updateTest)

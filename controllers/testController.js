@@ -1,7 +1,8 @@
-import Test, { Question, Midterm } from "../models/Test.js"
+import Test, { Question } from "../models/Test.js"
 import Result from "../models/Result.js"
 import User from "../models/User.js"
 import { Types } from 'mongoose'
+import { timerFunction } from '../config/finishTest.js'
 
 import excel from 'exceljs'
 import { join } from 'path'
@@ -36,6 +37,7 @@ export const getResults = async (req, res) => {
         const $match = { status: 'finish', midterm: null, createdAt: req.distance }
         if (req.query.user) Object.assign($match, { student: new Types.ObjectId(req.query.user) })
         if (req.query.test) Object.assign($match, { test: new Types.ObjectId(req.query.test) })
+        if (req.query.exam) Object.assign($match, { exam: new Types.ObjectId(req.query.exam) })
         if (req.query.group) Object.assign($match, { group: new Types.ObjectId(req.query.group) })
         const result = await Result.aggregate([
             { $match },
@@ -109,8 +111,6 @@ export const addAccessToTest = async (req, res) => {
 
 export const start = async (req, res) => {
     try {
-        // const result = await Result.findOne({ $and: [{ test: req.params.id }, { student: req.body.student }] })
-        // if (!result) {
         const qs = await Question.aggregate([
             { $match: { test: new Types.ObjectId(req.params.id) } },
             { $sample: { size: req.body.count } },
@@ -121,25 +121,14 @@ export const start = async (req, res) => {
                 }
             }
         ])
-        // test: req.params.id, status: 'start', student: req.body.student, start_time: Date.now().toString(),
         const questions = qs.map(q => ({ ...q, selected: '', variants: shuffleArray(q.variants) }))
-        // const newResult = await Result.create({
-        //     exam: req.body.exam,
-        //     test: req.params.id,
-        //     student: req.user._id,
-        //     status: 'start',
-        //     start_time: Date.now().toString(),
-        //     questions
-        // })
         const result = await Result.findByIdAndUpdate(req.body.result, {
             status: 'start',
-            start_time: Date.now().toString(),
+            start_time: Date.now(),
             questions
         })
+        timerFunction(req.body.time, result._id)
         res.status(200).json(result)
-        // } else {
-        //     res.status(200).json(result)
-        // }
     } catch (error) {
         console.log(error);
         res.status(500).json({ message: 'Server error!' })
@@ -175,7 +164,7 @@ export const finishTest = async (req, res) => {
         const newResult = {
             status: 'finish',
             rate: checkTrueVarinat(result.questions),
-            end_time: Date.now().toString(),
+            end_time: Date.now(),
         }
         if (req.query.secretcode) delete newResult.end_time
         await Result.findByIdAndUpdate(req.params.id, {

@@ -18,7 +18,6 @@ export const getAll = async (req, res) => {
 
 export const getByGroup = async (req, res) => {
     try {
-        // console.log(req.query);
         const today = new Date();
         const dateParts = [
             today.getFullYear().toString().substring(0),
@@ -45,7 +44,6 @@ export const getByGroup = async (req, res) => {
             {
                 $project: {
                     name: 1,
-                    // attendance: { $arrayElemAt: ["$attendence", 0] },
                     att: {
                         $cond: {
                           if: { $eq: [ { $size: "$attendence" }, 0 ] },

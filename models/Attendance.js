@@ -20,9 +20,6 @@ export default model('attendences', new Schema({
     date: {
         type: String,
     },
-    time: {
-        type: String,
-    },
     status: {
         type: Boolean,
     },

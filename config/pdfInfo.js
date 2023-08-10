@@ -1,4 +1,15 @@
 export const studentPdf = (data) => {
+    const currentYear = new Date().getFullYear();
+      const currentMonth = new Date().getMonth() + 1;
+      const startYear = data.start_year;
+      const startMonth = 9; // Сентябрь
+
+      let course = currentYear - startYear;
+
+      if (currentMonth > startMonth) {
+        course += 1;
+      }
+
     return `<!DOCTYPE html>
     <html lang="en">
     <head>
@@ -97,7 +108,7 @@ export const studentPdf = (data) => {
                 </tr>
                 <tr>
                     <td>O‘quv kursi / Курс обучения:</td>
-                    <td>${new Date().getFullYear() - data.start_year + 1}-kurs</td>
+                    <td>${course}-kurs</td>
                 </tr>
             </table>
             <br>

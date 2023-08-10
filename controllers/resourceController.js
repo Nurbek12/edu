@@ -1,6 +1,5 @@
 import Resource from '../models/Resource.js'
 import { deleteFile } from './testController.js'
-import { Types } from 'mongoose'
 
 export const getAll = async (req, res) => {
     try{

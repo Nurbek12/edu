@@ -8,7 +8,8 @@ import fs from 'fs'
 import { fileURLToPath } from 'url'
 import { createAction } from './actionController.js'
 import { v4 as uuid } from 'uuid'
-import { checkTrueVarinat, shuffleArray } from './testController.js'
+import { shuffleArray } from './testController.js'
+import { timerFunction } from '../config/finishTest.js'
 
 const dirname = fileURLToPath(new URL('.', import.meta.url));
 
@@ -153,7 +154,10 @@ export const start = async (req, res) => {
                   }}
             ])
             const questions = qs.map(q => ({ ...q, selected: '', variants: shuffleArray(q.variants) }))
-            const newResult = await Result.create({ group: req.user?.group, subject: req.body.subject, midterm: req.params.id, status: 'start', student: req.user?._id, start_time: Date.now().toString(), questions })
+            const newResult = await Result.create({ group: req.user?.group, subject: req.body.subject, 
+                midterm: req.params.id, status: 'start', student: req.user?._id, 
+                start_time: Date.now(), questions })
+                timerFunction(req.body.time, newResult._id)
             res.status(200).json(newResult)
         } else {
             res.status(200).json(result)
@@ -175,36 +179,6 @@ export const getTest = async (req, res) => {
         res.status(500).json({ message: 'Server error!' })
     }
 }
-
-export const updateVarint = async (req, res) => {
-    try {
-        await Result.findByIdAndUpdate(req.params.id, { $set: { ["questions." + req.params.n + ".selected"]: req.params.v } })
-        res.status(200).json(true)
-    } catch (error) {
-        console.log(error);
-        res.status(500).json({ message: 'Server error!' })
-    }
-}
-
-export const finishTest = async (req, res) => {
-    try {
-        const result = await Result.findById(req.params.id)
-        const newResult = {
-            status: 'finish',
-            rate: checkTrueVarinat(result.questions),
-            end_time: Date.now().toString(),
-        }
-        if(req.query.secretcode) delete newResult.end_time 
-        await Result.findByIdAndUpdate(req.params.id, {
-            $set: newResult
-        })
-        res.status(200).json(true)
-    } catch (error) {
-        console.log(error);
-        res.status(500).json({ message: 'Server error!' })
-    }
-}
-
 
 
 
@@ -305,7 +279,6 @@ export const getTestForGroup = async (req, res) => {
                     pipeline: [{
                         $match: {
                             student: new Types.ObjectId(req.user?._id),
-                            status: 'finish'
                         }
                     }, {
                         $project: {

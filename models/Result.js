@@ -22,13 +22,13 @@ export default model('results', new Schema({
         ref: 'groups'
     },
     start_time: {
-        type: String,
+        type: Number,
     },
     subject: {
         type: String
     },
     end_time: {
-        type: String
+        type: Number
     },
     status: {
         type: String,
