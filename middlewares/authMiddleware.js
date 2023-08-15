@@ -22,10 +22,10 @@ function getDefaultInterval(){
 
 export const auth = (req, res, next) => {
     const { authorization } = req.headers;
-    if (!authorization) return res.status(401).json({ error: 'Вы не можете сделать этот запрос.' })
+    if (!authorization) return res.redirect('/login')
     const token = authorization.replace("Bearer ", "")
     jwt.verify(token, secret, (err, payload) => {
-        if (err) return res.status(401).json({ error: 'Вы не можете сделать этот запрос.' })
+        if (err) return res.status(500).json({ error: 'Вы не можете сделать этот запрос.' })
         User.findById(payload._id).then(user => {
             if (req.query.gte && req.query.lte){
                 req.distance = { $gte: new Date(req.query.gte), $lte: new Date(req.query.lte) }

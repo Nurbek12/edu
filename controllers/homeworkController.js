@@ -41,6 +41,9 @@ export const getAll = async (req, res) => {
                             files: 1,
                             student_homeworks: { $arrayElemAt: ["$student_homeworks", 0] },
                         }
+                    },
+                    {
+                        $sort: { _id: -1 }
                     }
                 ])
         }
@@ -129,6 +132,15 @@ export const update = async (req, res) => {
     }
 }
 
+export const addFile = async (req, res) => {
+    try{
+        const result = await Homework.findByIdAndUpdate(req.params.id, { $push: { files: req.file.filename } }, { new: true })
+        res.status(200).json(result.files[result.files.length - 1])
+    }catch(error){
+        console.log(error);
+        res.status(500).json({ message: 'Server error!' })
+    }
+}
 
 export const deleteFile = async (req, res) => {
     try {

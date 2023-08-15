@@ -3,7 +3,7 @@ import { deleteFile } from './testController.js'
 
 export const getAll = async (req, res) => {
     try{
-        const result = await Resource.find({...req.query, createdAt: req.distance}).sort({ date: 1 })
+        const result = await Resource.find({...req.query, createdAt: req.distance}).sort({ _id: -1 })
             .populate('teacher', 'name')
             .populate('group', 'name')
         res.status(200).json(result)
