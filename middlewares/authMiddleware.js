@@ -8,8 +8,8 @@ function getDefaultInterval(){
     const month = now.getMonth() + 1;
     let start, end;
     if (month >= 9 || month <= 2) {
-        start = new Date(year - 1, 8, 1);
-        end = new Date(year, 1, 28);
+        start = new Date(year, 8, 1);
+        end = new Date(year+1, 1, 28);
     } else {
         start = new Date(year, 2, 1);
         end = new Date(year, 7, 31);
@@ -22,10 +22,10 @@ function getDefaultInterval(){
 
 export const auth = (req, res, next) => {
     const { authorization } = req.headers;
-    if (!authorization) return res.redirect('/login')
+    if (!authorization) return res.status(401).json({ error: 'Вы не можете сделать этот запрос. 1' })
     const token = authorization.replace("Bearer ", "")
     jwt.verify(token, secret, (err, payload) => {
-        if (err) return res.status(500).json({ error: 'Вы не можете сделать этот запрос.' })
+        if (err) return res.status(401).json({ error: 'Вы не можете сделать этот запрос. 2' })
         User.findById(payload._id).then(user => {
             if (req.query.gte && req.query.lte){
                 req.distance = { $gte: new Date(req.query.gte), $lte: new Date(req.query.lte) }

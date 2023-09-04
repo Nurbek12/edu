@@ -10,7 +10,7 @@ export const getAll = async (req, res) => {
             result = await Homework
                 .aggregate([
                     {
-                        $match: { groups: { $in: [ new Types.ObjectId(req.user?.group) ] } ,createdAt: req.distance }
+                        $match: { groups: { $in: [ new Types.ObjectId(req.user?.group) ] }, createdAt: req.distance, subject: req.query.subject }
                     },
                     {
                         $lookup: {

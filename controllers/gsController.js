@@ -1,4 +1,6 @@
+import { Types } from 'mongoose'
 import { Group, Science } from '../models/GS.js'
+import User from '../models/User.js'
 
 export const getAllGroups = async (req, res) => {
     try{
@@ -76,6 +78,32 @@ export const getForTeacherSubjects = async (req, res) => {
     try{
         const subjects = await Science.find({ name: { $in: req.user.accesssubjects } })
         res.status(200).json(subjects)
+    }catch(error){
+        console.log(error);
+        res.status(500).json({ message: 'Server error!' })
+    }
+}
+
+export const getByGroupStudent = async (req, res) => {
+    try{
+        const result = await User.aggregate([
+            {
+                $match: {
+                    accessgroup: { 
+                        $in: [ new Types.ObjectId(req.params.id) ]
+                    },
+                    role: "teacher"
+                },
+            },
+            {
+                $project: {
+                    _id: 0,
+                    accesssubjects: 1,
+                },
+            },
+        ])
+        const subjects = new Set(result.flatMap((teacher) => teacher.accesssubjects));
+        res.status(200).json(Array.from(subjects))
     }catch(error){
         console.log(error);
         res.status(500).json({ message: 'Server error!' })
