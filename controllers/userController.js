@@ -4,12 +4,19 @@ import { Types } from "mongoose"
 import { createAction } from './actionController.js'
 import bcrypt from 'bcryptjs'
 
-import pdf from 'html-pdf'
 import { studentPdf } from '../config/pdfInfo.js'
 import path from 'path'
 import fs from 'fs'
 import { fileURLToPath } from 'url'
 import { v4 as uuid } from 'uuid'
+
+import pdfMake from "pdfmake/build/pdfmake.js";
+import pdfFonts from "pdfmake/build/vfs_fonts.js";
+import { JSDOM } from "jsdom";
+import htmlToPdfMake from "html-to-pdfmake";
+
+pdfMake.vfs = pdfFonts.pdfMake.vfs;
+const { window } = new JSDOM("")
 
 const dirname = fileURLToPath(new URL('.', import.meta.url));
 
@@ -167,16 +174,60 @@ export const addContract = async (req, res) => {
 //
 export const downloadPdfInformation = async (req, res) => {
     try {
-        const file = path.join(dirname, '../', 'protected', `file-${uuid()}.pdf`);
-        pdf.create(studentPdf(req.user)).toFile(file, function(err, rs) {
-            if (err) {
-              console.log(err);
-              return;
-            }
-            res.download(file, () => {
-                setTimeout(() => fs.rmSync(file, { force: true }), 10000)
+        const html = htmlToPdfMake(studentPdf(req.user), { window });
+        const fileName = `file-${uuid()}.pdf`
+        const file = path.join(dirname, '../', 'protected', fileName);
+        const docDefinition = { 
+            content: [ html ],
+              styles: {
+                "html-img": {
+                    width: "100%"
+                },
+                "html-container": {
+                  margin: [0, 0, 0, 0],
+                  fontSize: 20,
+                },
+                "html-h1": {
+                  alignment: "center",
+                  fontSize: 24,
+                  margin: [0, 20, 0, 0],
+                },
+                "html-table": {
+                  width: "100%",
+                  layout: {
+                    hLineWidth: () => 1,
+                    vLineWidth: () => 1,
+                    hLineColor: () => "black",
+                    vLineColor: () => "black",
+                  },
+                },
+                "html-th": {
+                  fillColor: "#dddddd",
+                  fontSize: 12,
+                  bold: true,
+                  alignment: "center",
+                  margin: [0, 4, 0, 4],
+                },
+                "html-td": {
+                  fontSize: 12,
+                  margin: [0, 4, 0, 4],
+                },
+              },
+        };
+        
+        const pdfDocGenerator = pdfMake.createPdf(docDefinition);
+        pdfDocGenerator.getBuffer(async (buffer) => {
+            // res.setHeader("Content-Type", "application/pdf");
+            // res.setHeader("Content-Disposition", `attachment; filename=${fileName}`);
+            fs.writeFile(file, buffer, (err) => {
+                if(err) return
+                res.sendFile(file);
+
+                setTimeout(() => fs.rmSync(file, { force: true }), 10000);
             })
-          });
+
+            // Delete the file after a timeout of 10 seconds
+        });
     } catch (error) {
         console.log(error);
         res.status(500).json({ message: 'Server error!' })

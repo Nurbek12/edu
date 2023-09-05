@@ -8,6 +8,11 @@ const beforeEnter = (to, __, next) => {
     else next()
 }
 
+const beforeEnterIndex = (_, __, next) => {
+    if (store.getters.role) next('/' + store.getters.role)
+    else next()
+}
+
 export default createRouter({
     history: createWebHistory(),
     routes: [
@@ -26,7 +31,7 @@ export default createRouter({
         { path: '/midterms/:id', component: () => import('../views/student/MidtermExam.vue'), beforeEnter, meta: { role: 'all' } },
         { path: '/profile', component: () => import('../views/Profile.vue'), beforeEnter, meta: { role: 'all' } },
         { path: '/login', component: () => import('../views/Login.vue') },
-        { path: '/', component: () => import('../views/Login.vue') },
+        { path: '/', component: () => import('../views/Login.vue'), beforeEnter: beforeEnterIndex, },
 
         { path: '/admin/', component: () => import('../views/admin/Dashboard.vue'), beforeEnter, meta: { role: 'admin' } },
         { path: '/admin/groups', component: () => import('../views/admin/Groups.vue'), beforeEnter, meta: { role: 'admin' } },
