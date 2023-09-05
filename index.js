@@ -50,7 +50,7 @@ app
     .use('/attendence', attendanceRouter)
     .get('/action', getAll)
 
-    .use('*', async (_, res) => res.sendFile(join(dirname, 'dist', 'index.html')))
+    .use('*', async (_, res) => res.sendFile(join(dirname, 'client', 'dist', 'index.html')))
 
 SocketIO(io)
 
