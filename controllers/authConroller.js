@@ -1,7 +1,6 @@
 import User from '../models/User.js'
 import { secret } from '../config/keys.js'
 import jwt from 'jsonwebtoken'
-import logger from '../config/log.js'
 import bcrypt from 'bcryptjs'
 
 export const login = async (req, res) => {
@@ -16,7 +15,6 @@ export const login = async (req, res) => {
         if(!isMatch) return res.json({ message: 'Login or Password incorrect!', success: false })
         
         const token = jwt.sign({ _id: user._id }, secret, { expiresIn: '2h' })
-        logger.info(`User ${user.id}: ${user.name}, IP:${req?.connection?.remoteAddress} logged in ${new Date().toLocaleString()}.`)
         res.status(200).json({ token, user: userData, success: true })
     } catch (error) {
         console.log(error)

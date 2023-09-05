@@ -8,3 +8,4 @@
 /.gitignore
 /client/node_modules
 /dist
+/app.log
