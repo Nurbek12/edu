@@ -33,7 +33,7 @@ app
     .use(express.json({ limit: '100mb' }))
     .use(express.urlencoded({ limit: '100mb', extended: true, parameterLimit:50000 }))
     .use('/files', express.static(path.join(dirname, 'upload')))
-    .use(express.static(path.join(dirname, 'dist')))
+    .use(express.static(path.join(dirname, 'client', 'dist')))
     
     .use(indexRouter)
     .use('/exam', examRouter)

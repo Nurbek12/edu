@@ -102,6 +102,25 @@ export const getById = async (req, res) => {
     }
 }
 
+export const getStudentHomework = async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const perpage = parseInt(req.query.perpage) || 10;
+        const [result, count] = await Promise.all([
+            StudentHomework.find({ homework: req.params.id })
+                .skip((page - 1) * perpage)
+                .limit(perpage)
+                .populate('group', 'name')
+                .populate('student', 'name'),
+            StudentHomework.count({ homework: req.params.id })
+        ])
+        res.status(200).json({ result, count })
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ message: 'Server error!' })
+    }
+}
+
 export const create = async (req, res) => {
     try {
         const files = req.files.map(({filename}) => filename)

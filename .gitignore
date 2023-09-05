@@ -5,3 +5,6 @@
 /views
 /public
 /upload2
+/.gitignore
+/client/node_modules
+/dist
